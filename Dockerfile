@@ -124,18 +124,29 @@ RUN mkdir -p /home/renderer/src \
 # Configure stylesheet
 RUN mkdir -p /home/renderer/src \
  && cd /home/renderer/src \
- && git clone --single-branch --branch v4.23.0 https://github.com/gravitystorm/openstreetmap-carto.git --depth 1 \
- && cd openstreetmap-carto \
+ && git clone https://github.com/cxberlin/gravel-cartocss-style.git cyclosm-cartocss-style\
+    && git -C cyclosm-cartocss-style checkout 11bf401331af5636a1cb338fab29b4c849652ead \
+ && cd cyclosm-cartocss-style \
  && rm -rf .git \
  && npm install -g carto@0.18.2 \
- && carto project.mml > mapnik.xml \
- && scripts/get-shapefiles.py \
- && rm /home/renderer/src/openstreetmap-carto/data/*.zip
+ && mkdir data \
+ && cd data \
+ && wget -O simplified-land-polygons.zip http://osmdata.openstreetmap.de/download/simplified-land-polygons-complete-3857.zip \
+ && wget -O land-polygons.zip http://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip \
+ && unzip simplified-land-polygons.zip \
+ && unzip land-polygons.zip \
+ && rm /home/renderer/src/cyclosm-cartocss-style/data/*.zip \
+ && cd ../ \
+ && sed -i 's/dbname: "osm"/dbname: "gis"/g' project.mml \
+ && sed -i 's,http://osmdata.openstreetmap.de/download/simplified-land-polygons-complete-3857.zip,data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp,g' project.mml \
+ && sed -i 's,http://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip,data/land-polygons-split-3857/land_polygons.shp,g' project.mml \
+ && carto project.mml > mapnik.xml
 
 # Configure renderd
 RUN sed -i 's/renderaccount/renderer/g' /usr/local/etc/renderd.conf \
  && sed -i 's/\/truetype//g' /usr/local/etc/renderd.conf \
- && sed -i 's/hot/tile/g' /usr/local/etc/renderd.conf
+ && sed -i 's/hot/tile/g' /usr/local/etc/renderd.conf \
+ && sed -i 's/openstreetmap-carto/cyclosm-cartocss-style/g' /usr/local/etc/renderd.conf
 
 # Configure Apache
 RUN mkdir /var/lib/mod_tile \
