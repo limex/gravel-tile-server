@@ -122,10 +122,12 @@ RUN mkdir -p /home/renderer/src \
  && cd ..
 
 # Configure stylesheet
+ARG STYLEREPO
+ARG STYLECOMMIT
 RUN mkdir -p /home/renderer/src \
  && cd /home/renderer/src \
- && git clone https://github.com/cxberlin/gravel-cartocss-style.git cyclosm-cartocss-style\
-    && git -C cyclosm-cartocss-style checkout 11bf401331af5636a1cb338fab29b4c849652ead \
+ && git clone ${STYLEREPO} cyclosm-cartocss-style\
+    && git -C cyclosm-cartocss-style checkout ${STYLECOMMIT} \
  && cd cyclosm-cartocss-style \
  && rm -rf .git \
  && npm install -g carto@0.18.2 \
